@@ -70,11 +70,13 @@ When switching **from Zai back to Anthropic**, you may encounter:
 Invalid signature in thinking block
 ```
 
-**Solution:** Run `/compact` in Claude Code before switching.
+**Solution:** Run `/compact` or `/clear` in Claude Code before switching.
 
 ```bash
 # Before running: bzzai off
 /compact
+# or
+/clear
 ```
 
 | Switch Path | Need /compact? |

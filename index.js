@@ -114,7 +114,7 @@ function disableZai() {
     console.log(`${colors.red}Error: Claude settings not found at ${CLAUDE_SETTINGS}${colors.reset}`);
     return false;
   }
-  console.log(`${colors.yellow}Tip: Run /compact in Claude Code before switching to avoid signature errors${colors.reset}`);
+  console.log(`${colors.yellow}Tip: Run /compact or /clear in Claude Code before switching to avoid signature errors${colors.reset}`);
   const content = fs.readFileSync(CLAUDE_SETTINGS, 'utf8');
   const settings = JSON.parse(content);
   settings.env = settings.env || {};
@@ -196,7 +196,7 @@ function showMenu() {
         break;
       case 1: // Disable Zai
         if (disableZai()) {
-          const msg = `${colors.green}✓ Zai disabled (using Anthropic default)${colors.reset}\n\n${colors.yellow}Tip: Run /compact before using to avoid signature errors${colors.reset}`;
+          const msg = `${colors.green}✓ Zai disabled (using Anthropic default)${colors.reset}\n\n${colors.yellow}Tip: Run /compact or /clear before using to avoid signature errors${colors.reset}`;
           showMessage(msg, showMenu);
         } else {
           showMenu();
