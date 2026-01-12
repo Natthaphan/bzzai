@@ -150,7 +150,10 @@ function showMenu() {
     console.log(`${colors.magenta}${colors.bright}    ║     BZZAI Toggle Menu           ║${colors.reset}`);
     console.log(`${colors.magenta}${colors.bright}    ╚═════════════════════════════════╝${colors.reset}`);
     console.log('');
-    console.log(`${colors.dim}    Status:${colors.reset} ${status.enabled ? `${colors.green}● Zai ENABLED${colors.reset}` : `${colors.white}○ Zai DISABLED${colors.reset}`);
+    const statusText = status.enabled
+      ? `${colors.green}[ON] Zai ENABLED${colors.reset}`
+      : `${colors.white}[OFF] Zai DISABLED${colors.reset}`;
+    console.log(`${colors.dim}    Status:${colors.reset} ${statusText}`);
     console.log('');
     console.log(`${colors.dim}    ─────────────────────────────────────${colors.reset}`);
     console.log('');
@@ -207,10 +210,10 @@ function showMenu() {
           const newStatus = getStatus();
           console.log(`${colors.cyan}Status:${colors.reset}`);
           if (newStatus.enabled) {
-            console.log(`  ${colors.green}● Zai ENABLED${colors.reset}`);
+            console.log(`  ${colors.green}[ON] Zai ENABLED${colors.reset}`);
             console.log(`  ${colors.dim}URL: ${newStatus.url}${colors.reset}`);
           } else {
-            console.log(`  ${colors.white}○ Zai DISABLED (default Anthropic)${colors.reset}`);
+            console.log(`  ${colors.white}[OFF] Zai DISABLED (default Anthropic)${colors.reset}`);
           }
           console.log('');
           console.log(`${colors.dim}Press Enter to continue...${colors.reset}`);
@@ -311,10 +314,10 @@ function cliMode(args) {
     case 'status':
       const status = getStatus();
       if (status.enabled) {
-        console.log(`${colors.green}● Zai ENABLED${colors.reset}`);
+        console.log(`${colors.green}[ON] Zai ENABLED${colors.reset}`);
         console.log(`${colors.dim}URL: ${status.url}${colors.reset}`);
       } else {
-        console.log(`${colors.white}○ Zai DISABLED (default Anthropic)${colors.reset}`);
+        console.log(`${colors.white}[OFF] Zai DISABLED (default Anthropic)${colors.reset}`);
       }
       break;
     default:
