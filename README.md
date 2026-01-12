@@ -1,132 +1,78 @@
-# Zai Toggle Script
+# BZZAI Helper
 
-สคริปต์สำหรับสลับระหว่าง **Zai API** กับ **Anthropic Default** ใน Claude Code โดยไม่ต้อง restart
+สลับระหว่าง **Zai API** กับ **Anthropic Default** ใน Claude Code พร้อม TUI Menu
 
-## ไฟล์ประกอบ
-
-```
-~/DataStore/me/claude/zai/
-├── toggle.sh       # Script หลัก
-├── env.sh          # Config template (ใส่ API key ตรงนี้)
-├── alias.sh        # Shell aliases
-├── README.md       # ไฟล์นี้
-└── CHANGELOG.md    # บันทึกการเปลี่ยนแปลง
-```
-
-## การติดตั้ง
-
-### 1. เพิ่มเข้า `.zshrc`
+## Quick Start (npx)
 
 ```bash
-# เพิ่มบรรทัดนี้ที่ท้าย ~/.zshrc
-export ZAI_DIR="$HOME/DataStore/me/claude/zai"
-source "$ZAI_DIR/alias.sh"
+# ติดตั้ง Gum ก่อน
+brew install gum
+
+# รันครั้งแรก - จะสร้าง config file ให้
+npx bzzai-helper
+
+# แก้ API key
+nano ~/.zai/env.sh
+
+# ใช้งาน
+npx bzzai-helper        # Open TUI menu
+npx bzzai-helper on     # Enable Zai
+npx bzzai-helper off    # Disable Zai
+npx bzzai-helper status # Check status
 ```
 
-### 2. ตั้งค่า API Key
+## Manual Install
 
 ```bash
-nano ~/DataStore/me/claude/zai/env.sh
+# Clone repo
+git clone https://github.com/yourusername/bzzai-helper.git ~/bzzai-helper
+cd ~/bzzai-helper
+
+# ติดตั้ง Gum
+brew install gum
+
+# เพิ่ม bin ลง PATH
+echo 'export PATH="$PATH:~/bzzai-helper/bin"' >> ~/.zshrc
+source ~/.zshrc
+
+# ใช้งาน
+bzzai on
+bzzai off
+bzzai status
+bzzai menu
 ```
 
-แก้:
+## ตั้งค่า API Key
+
+สร้างไฟล์ `~/.zai/env.sh`:
+
 ```bash
-ZAI_AUTH_TOKEN="your-new-api-key-here"  # <- ใส่ key จริงตรงนี้
+mkdir -p ~/.zai
+nano ~/.zai/env.sh
+```
+
+```bash
+ZAI_AUTH_TOKEN="your-api-key-here"
 ZAI_BASE_URL="https://api.z.ai/api/anthropic"
 ZAI_TIMEOUT_MS="3000000"
+ZAI_DEBUG="0"
 ```
 
-### 3. รีโหลด shell
+## TUI Menu
 
-```bash
-source ~/.zshrc
 ```
+═════════════════════════════════
+      BZZAI Toggle Menu
+═════════════════════════════════
 
-## วิธีใช้งาน
-
-### คำสั่งพื้นฐาน
-
-```bash
-zai on      # เปิด Zai API
-zai off     # ปิด Zai (กลับ Anthropic default)
-zai status  # เช็คสถานะปัจจุบัน
-zai edit    # แก้ไฟล์ config
-```
-
-### ตัวอย่าง
-
-```bash
-$ zai status
-🟢 Zai: ENABLED
-   Base URL: https://api.z.ai/api/anthropic
-   Session env: /Users/natthaphan/.claude/session-env.sh
-
-$ zai off
-✓ Zai config DISABLED (using default Anthropic)
-
-$ zai status
 ⚪ Zai: DISABLED (default Anthropic)
 
-$ zai on
-✓ Zai config ENABLED
+▶ Enable Zai     → Switch to Zai API
+  Disable Zai    → Switch back to Anthropic
+  Check Status   → Show current status
+  Edit Config    → Edit API config (TUI form)
+  Exit
 ```
-
-## หลักการทำงาน
-
-```
-┌─────────────────┐
-│   zai on/off    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  ~/.zai-env             │  ← Toggle ไฟล์นี้
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  ~/.claude/session-env.sh│  ← Claude อ่านทุกครั้ง
-└────────┬────────────────┘
-         │
-         ▼
-┌─────────────────────────┐
-│  Claude Code Session    │  ← ไม่ต้อง restart!
-└─────────────────────────┘
-```
-
-### ไฟล์ที่เกี่ยวข้อง
-
-| ไฟล์ | วัตถุประสงค์ |
-|------|--------------|
-| `~/.zai-env` | Config หลัก (toggle script เขียนที่นี่) |
-| `~/.claude/session-env.sh` | Runtime env (Claude อ่านทุก bash command) |
-| `~/.claude/settings.json` | ตั้งค่า `CLAUDE_ENV_FILE` ชี้ไปที่นี่ |
-
-## Troubleshooting
-
-### zai status แสดง ENABLED แต่ใช้ Zai ไม่ได้
-
-1. เช็คว่าใส่ key จริงใน `env.sh` หรือยัง
-2. รัน `zai on` ใหม่อีกครั้ง
-3. เช็คไฟล์ `~/.claude/session-env.sh` ว่ามีค่าถูกต้อง
-
-### รัน `zai on` แล้วไม่มีผล
-
-1. เช็คว่า `.zshrc` มี `source` เข้ามาหรือยัง
-2. ลอง `source ~/.zshrc` แล้วรันใหม่
-3. เช็คว่า `CLAUDE_ENV_FILE` ใน `settings.json` ถูกต้อง
-
-### Key หมดอายุ
-
-1. ไปที่ Zai dashboard สร้าง key ใหม่
-2. รัน `zai edit` แล้วแก้ key
-3. รัน `zai on` อีกครั้ง
-
-## Security Best Practices
-
-1. **ห้าม commit** `env.sh` ขึ้น git (มี API key)
-2. **Revoke key** เก่าที่เผยแพร่ออกไปทันที
-3. **หมุน key** บ้าง (rotate periodically)
 
 ## License
 

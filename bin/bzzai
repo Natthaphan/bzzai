@@ -1,0 +1,48 @@
+#!/bin/bash
+# BZZAI Helper - npx entry point
+# Usage: npx bzzai-helper [on|off|status|menu]
+
+ZAI_ROOT="${ZAI_ROOT:-$HOME/.zai}"
+ZAI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Ensure ~/.zai exists
+mkdir -p "$ZAI_ROOT"
+
+# Copy example env if not exists
+if [[ ! -f "$ZAI_ROOT/env.sh" ]]; then
+  cp "$ZAI_DIR/lib/env.sh.example" "$ZAI_ROOT/env.sh"
+  echo "Created config file at $ZAI_ROOT/env.sh"
+  echo "Please edit it with your API key:"
+  echo "  nano $ZAI_ROOT/env.sh"
+  exit 1
+fi
+
+# Load config
+source "$ZAI_ROOT/env.sh"
+export ZAI_DIR ZAI_ROOT ZAI_AUTH_TOKEN ZAI_BASE_URL ZAI_TIMEOUT_MS ZAI_DEBUG
+
+# Source toggle functions
+source "$ZAI_DIR/lib/toggle.sh"
+
+case "${1:-menu}" in
+  on)
+    zai-on
+    ;;
+  off)
+    zai-off
+    ;;
+  status)
+    zai-status
+    ;;
+  menu|"")
+    exec "$ZAI_DIR/menu.sh"
+    ;;
+  *)
+    echo "Usage: bzzai on|off|status|menu"
+    echo "  npx bzzai-helper        # Open TUI menu"
+    echo "  npx bzzai-helper on     # Enable Zai"
+    echo "  npx bzzai-helper off    # Disable Zai"
+    echo "  npx bzzai-helper status # Check status"
+    exit 1
+    ;;
+esac

@@ -88,7 +88,7 @@ zai-menu() {
     gum style \
       --foreground 212 --border-foreground 212 --border double \
       --align center --width 40 --margin "1 2" \
-      "Zai Toggle Menu"
+      "BZZAI Toggle Menu"
 
     # Status
     gum style --foreground 240 --margin "0 2" "$(get_status)"

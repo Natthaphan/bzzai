@@ -1,0 +1,27 @@
+{
+  "name": "bzzai-helper",
+  "version": "1.0.0",
+  "description": "Toggle Zai API for Claude Code via TUI Menu",
+  "bin": {
+    "bzzai": "./bin/bzzai"
+  },
+  "scripts": {
+    "postinstall": "chmod +x bin/*"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "toggle.sh",
+    "menu.sh"
+  ],
+  "keywords": [
+    "zai",
+    "claude",
+    "claude-code",
+    "anthropic",
+    "api",
+    "toggle"
+  ],
+  "author": "",
+  "license": "MIT"
+}
