@@ -4,5 +4,18 @@
  */
 
 const path = require('path');
-const ZAI_DIR = path.dirname(__dirname);
-require(path.join(ZAI_DIR, 'index.js'));
+const fs = require('fs');
+
+// Find index.js - works for npx and global install
+let indexJs;
+try {
+  // Try relative to this file (npx/global install)
+  const pkgPath = require.resolve('bzzai-helper/package.json');
+  const pkgDir = path.dirname(pkgPath);
+  indexJs = path.join(pkgDir, 'index.js');
+} catch (e) {
+  // Fallback: assume index.js is in same directory
+  indexJs = path.join(__dirname, '..', 'index.js');
+}
+
+require(indexJs);
