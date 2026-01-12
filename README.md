@@ -1,24 +1,28 @@
 # BZZAI Helper
 
-สลับระหว่าง **Zai API** กับ **Anthropic Default** ใน Claude Code พร้อม TUI Menu
+Switch between **Zai API** and **Anthropic Default** in Claude Code with TUI Menu
+
+---
 
 ## Quick Start (npx)
 
-ไม่ต้องติดตั้งอะไรเพิ่ม - รันได้เลย:
+No installation required - run directly:
 
 ```bash
-# รันครั้งแรง - จะสร้าง config file ให้
+# First run - creates config file automatically
 npx bzzai-helper
 
-# แก้ API key
+# Edit API key
 nano ~/.zai/env.sh
 
-# ใช้งาน
+# Usage
 npx bzzai-helper        # Open TUI menu
 npx bzzai-helper on     # Enable Zai
 npx bzzai-helper off    # Disable Zai
 npx bzzai-helper status # Check status
 ```
+
+---
 
 ## Manual Install
 
@@ -27,20 +31,22 @@ npx bzzai-helper status # Check status
 git clone https://github.com/Natthaphan/bzzai.git ~/bzzai
 cd ~/bzzai
 
-# เพิ่ม bin ลง PATH
+# Add to PATH
 echo 'export PATH="$PATH:~/bzzai/bin"' >> ~/.zshrc
 source ~/.zshrc
 
-# ใช้งาน
+# Usage
 bzzai on
 bzzai off
 bzzai status
 bzzai menu
 ```
 
-## ตั้งค่า API Key
+---
 
-สร้างไฟล์ `~/.zai/env.sh` (สร้างอัตโนมัติครั้งแรก):
+## API Key Configuration
+
+Create `~/.zai/env.sh` (auto-created on first run):
 
 ```bash
 mkdir -p ~/.zai
@@ -54,6 +60,30 @@ ZAI_TIMEOUT_MS="3000000"
 ZAI_DEBUG="0"
 ```
 
+---
+
+## Important: Avoid Signature Errors ⚠️
+
+When switching **from Zai back to Anthropic**, you may encounter:
+
+```
+Invalid signature in thinking block
+```
+
+**Solution:** Run `/compact` in Claude Code before switching.
+
+```bash
+# Before running: bzzai off
+/compact
+```
+
+| Switch Path | Need /compact? |
+|------------|----------------|
+| Anthropic → Zai (`bzzai on`) | No |
+| Zai → Anthropic (`bzzai off`) | **Yes** |
+
+---
+
 ## TUI Menu
 
 ```
@@ -61,16 +91,20 @@ ZAI_DEBUG="0"
     ║     BZZAI Toggle Menu           ║
     ╚═════════════════════════════════╝
 
-    Status: ○ Zai DISABLED
+    Status: [OFF] Zai DISABLED
 
     ─────────────────────────────────────
 
-    [1] Enable Zai     Switch to Zai API
-    [2] Disable Zai    Switch back to Anthropic
-    [3] Check Status   Show current status
-    [4] Edit Config    Edit API config
-    [q] Quit           Exit
+    > Enable Zai     Switch to Zai API
+      Disable Zai    Switch back to Anthropic
+      Check Status   Show current status
+      Edit Config    Edit API config
+      Quit           Exit
+
+    ↑↓ Navigate  Enter Select  q Quit
 ```
+
+---
 
 ## License
 
