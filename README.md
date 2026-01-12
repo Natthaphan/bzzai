@@ -4,11 +4,10 @@
 
 ## Quick Start (npx)
 
-```bash
-# ติดตั้ง Gum ก่อน
-brew install gum
+ไม่ต้องติดตั้งอะไรเพิ่ม - รันได้เลย:
 
-# รันครั้งแรก - จะสร้าง config file ให้
+```bash
+# รันครั้งแรง - จะสร้าง config file ให้
 npx bzzai-helper
 
 # แก้ API key
@@ -25,14 +24,11 @@ npx bzzai-helper status # Check status
 
 ```bash
 # Clone repo
-git clone https://github.com/yourusername/bzzai-helper.git ~/bzzai-helper
-cd ~/bzzai-helper
-
-# ติดตั้ง Gum
-brew install gum
+git clone https://github.com/Natthaphan/bzzai.git ~/bzzai
+cd ~/bzzai
 
 # เพิ่ม bin ลง PATH
-echo 'export PATH="$PATH:~/bzzai-helper/bin"' >> ~/.zshrc
+echo 'export PATH="$PATH:~/bzzai/bin"' >> ~/.zshrc
 source ~/.zshrc
 
 # ใช้งาน
@@ -44,7 +40,7 @@ bzzai menu
 
 ## ตั้งค่า API Key
 
-สร้างไฟล์ `~/.zai/env.sh`:
+สร้างไฟล์ `~/.zai/env.sh` (สร้างอัตโนมัติครั้งแรก):
 
 ```bash
 mkdir -p ~/.zai
@@ -61,17 +57,19 @@ ZAI_DEBUG="0"
 ## TUI Menu
 
 ```
-═════════════════════════════════
-      BZZAI Toggle Menu
-═════════════════════════════════
+    ╔═════════════════════════════════╗
+    ║     BZZAI Toggle Menu           ║
+    ╚═════════════════════════════════╝
 
-⚪ Zai: DISABLED (default Anthropic)
+    Status: ○ Zai DISABLED
 
-▶ Enable Zai     → Switch to Zai API
-  Disable Zai    → Switch back to Anthropic
-  Check Status   → Show current status
-  Edit Config    → Edit API config (TUI form)
-  Exit
+    ─────────────────────────────────────
+
+    [1] Enable Zai     Switch to Zai API
+    [2] Disable Zai    Switch back to Anthropic
+    [3] Check Status   Show current status
+    [4] Edit Config    Edit API config
+    [q] Quit           Exit
 ```
 
 ## License

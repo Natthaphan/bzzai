@@ -2,6 +2,7 @@
   "name": "bzzai-helper",
   "version": "1.0.0",
   "description": "Toggle Zai API for Claude Code via TUI Menu",
+  "main": "index.js",
   "bin": {
     "bzzai": "./bin/bzzai"
   },
@@ -11,6 +12,7 @@
   "files": [
     "bin/",
     "lib/",
+    "index.js",
     "toggle.sh",
     "menu.sh"
   ],
@@ -23,5 +25,8 @@
     "toggle"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
