@@ -43,10 +43,6 @@ ZAI_TIMEOUT_MS="3000000"
 ZAI_DEBUG="0"
 `;
   fs.writeFileSync(ENV_FILE, example);
-  console.log(`${colors.cyan}Created config file at:${colors.reset} ${ENV_FILE}`);
-  console.log(`${colors.yellow}Please edit it with your API key:${colors.reset}`);
-  console.log(`  nano ${ENV_FILE}`);
-  process.exit(1);
 }
 
 // Parse env.sh file
@@ -118,32 +114,45 @@ function disableZai() {
     console.log(`${colors.red}Error: Claude settings not found at ${CLAUDE_SETTINGS}${colors.reset}`);
     return false;
   }
+  console.log(`${colors.yellow}Tip: Run /compact in Claude Code before switching to avoid signature errors${colors.reset}`);
   const content = fs.readFileSync(CLAUDE_SETTINGS, 'utf8');
   const settings = JSON.parse(content);
-  if (settings.env) {
-    delete settings.env.ANTHROPIC_AUTH_TOKEN;
-    delete settings.env.ANTHROPIC_BASE_URL;
-    delete settings.env.API_TIMEOUT_MS;
-  }
+  settings.env = settings.env || {};
+  settings.env.ANTHROPIC_AUTH_TOKEN = "";
+  settings.env.ANTHROPIC_BASE_URL = "";
+  settings.env.API_TIMEOUT_MS = "";
   fs.writeFileSync(CLAUDE_SETTINGS, JSON.stringify(settings, null, 2));
   return true;
 }
 
-// Simple TUI menu using readline
+// Setup keypress events once
+const readline = require('readline');
+let keypressInitialized = false;
+
+function initKeypress() {
+  if (!keypressInitialized && process.stdin.isTTY) {
+    readline.emitKeypressEvents(process.stdin);
+    keypressInitialized = true;
+  }
+}
+
+// Arrow key navigation menu
 function showMenu() {
-  const readline = require('readline');
   const env = loadEnv();
-  const status = getStatus();
 
   const options = [
-    { key: '1', label: 'Enable Zai', desc: 'Switch to Zai API' },
-    { key: '2', label: 'Disable Zai', desc: 'Switch back to Anthropic' },
-    { key: '3', label: 'Check Status', desc: 'Show current status' },
-    { key: '4', label: 'Edit Config', desc: 'Edit API config' },
-    { key: 'q', label: 'Quit', desc: 'Exit' },
+    { label: 'Enable Zai', desc: 'Switch to Zai API' },
+    { label: 'Disable Zai', desc: 'Switch back to Anthropic' },
+    { label: 'Check Status', desc: 'Show current status' },
+    { label: 'Edit Config', desc: 'Edit API config' },
+    { label: 'Quit', desc: 'Exit' },
   ];
 
+  let selectedIndex = 0;
+  let active = true;
+
   function render() {
+    const status = getStatus();
     console.clear();
     console.log('');
     console.log(`${colors.magenta}${colors.bright}    ╔═════════════════════════════════╗${colors.reset}`);
@@ -158,141 +167,275 @@ function showMenu() {
     console.log(`${colors.dim}    ─────────────────────────────────────${colors.reset}`);
     console.log('');
 
-    options.forEach(opt => {
-      console.log(`    ${colors.cyan}[${opt.key}]${colors.reset} ${colors.bright}${opt.label}${colors.reset} ${colors.dim}${opt.desc}${colors.reset}`);
+    options.forEach((opt, i) => {
+      const prefix = i === selectedIndex ? `${colors.cyan}  > ` : '    ';
+      const label = i === selectedIndex
+        ? `${colors.bright}${colors.cyan}${opt.label}${colors.reset}`
+        : `${colors.white}${opt.label}${colors.reset}`;
+      const desc = `${colors.dim}${opt.desc}${colors.reset}`;
+      console.log(`${prefix}${label}  ${desc}`);
     });
+
     console.log('');
     console.log(`${colors.dim}    ─────────────────────────────────────${colors.reset}`);
     console.log('');
+    console.log(`${colors.dim}    ↑↓ Navigate  Enter Select  q Quit${colors.reset}`);
   }
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
+  function handleSelect() {
+    active = false;
+    process.stdin.removeListener('keypress', onKeypress);
 
-  function ask() {
-    render();
-    rl.question(`${colors.cyan}Choose option:${colors.reset} `, (answer) => {
-      switch (answer.trim().toLowerCase()) {
-        case '1':
-          rl.close();
-          if (enableZai(env)) {
-            console.clear();
-            console.log('');
-            console.log(`${colors.green}✓ Zai enabled${colors.reset}`);
-            console.log('');
-            console.log(`${colors.dim}Press Enter to continue...${colors.reset}`);
-            const continueRl = readline.createInterface({ input: process.stdin, output: process.stdout });
-            continueRl.question('', () => { continueRl.close(); showMenu(); });
-          } else {
-            showMenu();
-          }
-          break;
-        case '2':
-          rl.close();
-          if (disableZai()) {
-            console.clear();
-            console.log('');
-            console.log(`${colors.green}✓ Zai disabled (using Anthropic default)${colors.reset}`);
-            console.log('');
-            console.log(`${colors.dim}Press Enter to continue...${colors.reset}`);
-            const continueRl2 = readline.createInterface({ input: process.stdin, output: process.stdout });
-            continueRl2.question('', () => { continueRl2.close(); showMenu(); });
-          } else {
-            showMenu();
-          }
-          break;
-        case '3':
-          rl.close();
-          console.clear();
-          console.log('');
-          const newStatus = getStatus();
-          console.log(`${colors.cyan}Status:${colors.reset}`);
-          if (newStatus.enabled) {
-            console.log(`  ${colors.green}[ON] Zai ENABLED${colors.reset}`);
-            console.log(`  ${colors.dim}URL: ${newStatus.url}${colors.reset}`);
-          } else {
-            console.log(`  ${colors.white}[OFF] Zai DISABLED (default Anthropic)${colors.reset}`);
-          }
-          console.log('');
-          console.log(`${colors.dim}Press Enter to continue...${colors.reset}`);
-          const continueRl3 = readline.createInterface({ input: process.stdin, output: process.stdout });
-          continueRl3.question('', () => { continueRl3.close(); showMenu(); });
-          break;
-        case '4':
-          rl.close();
-          editConfig(env);
-          break;
-        case 'q':
-        case 'quit':
-        case 'exit':
-          rl.close();
-          console.clear();
-          console.log('');
-          console.log(`${colors.dim}Goodbye!${colors.reset}`);
-          console.log('');
-          process.exit(0);
-          break;
-        default:
-          ask();
-      }
-    });
-  }
-
-  ask();
-}
-
-// Edit config
-function editConfig(env) {
-  const readline = require('readline');
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
-
-  async function doEdit() {
-    console.clear();
-    console.log('');
-    console.log(`${colors.cyan}${colors.bright}Edit Configuration${colors.reset}`);
-    console.log('');
-    console.log(`${colors.dim}Current values:${colors.reset}`);
-    console.log(`  Token: ${env.ZAI_AUTH_TOKEN.substring(0, 20)}...`);
-    console.log(`  URL:   ${env.ZAI_BASE_URL}`);
-    console.log(`  Timeout: ${env.ZAI_TIMEOUT_MS}ms`);
-    console.log('');
-    console.log(`${colors.dim}Press Enter to keep current value${colors.reset}`);
-    console.log('');
-
-    const newToken = await question(`${colors.cyan}Token [${colors.dim}${env.ZAI_AUTH_TOKEN.substring(0, 20)}...${colors.cyan}]:${colors.reset} `);
-    const newUrl = await question(`${colors.cyan}Base URL [${colors.dim}${env.ZAI_BASE_URL}${colors.cyan}]:${colors.reset} `);
-    const newTimeout = await question(`${colors.cyan}Timeout (ms) [${colors.dim}${env.ZAI_TIMEOUT_MS}${colors.cyan}]:${colors.reset} `);
-
-    if (newToken.trim()) env.ZAI_AUTH_TOKEN = newToken.trim();
-    if (newUrl.trim()) env.ZAI_BASE_URL = newUrl.trim();
-    if (newTimeout.trim()) env.ZAI_TIMEOUT_MS = newTimeout.trim();
-
-    console.log('');
-    const confirm = await question(`${colors.yellow}Save changes? [y/N]:${colors.reset} `);
-
-    rl.close();
-
-    if (confirm.toLowerCase() === 'y') {
-      saveEnv(env);
-      console.log('');
-      console.log(`${colors.green}✓ Config saved${colors.reset}`);
-      console.log('');
-      console.log(`${colors.dim}Press Enter to continue...${colors.reset}`);
-      const continueRl = readline.createInterface({ input: process.stdin, output: process.stdout });
-      continueRl.question('', () => { continueRl.close(); showMenu(); });
-    } else {
-      showMenu();
+    switch (selectedIndex) {
+      case 0: // Enable Zai
+        if (enableZai(env)) {
+          showMessage(`${colors.green}✓ Zai enabled${colors.reset}`, showMenu);
+        } else {
+          showMenu();
+        }
+        break;
+      case 1: // Disable Zai
+        if (disableZai()) {
+          const msg = `${colors.green}✓ Zai disabled (using Anthropic default)${colors.reset}\n\n${colors.yellow}Tip: Run /compact before using to avoid signature errors${colors.reset}`;
+          showMessage(msg, showMenu);
+        } else {
+          showMenu();
+        }
+        break;
+      case 2: // Check Status
+        const status = getStatus();
+        let msg;
+        if (status.enabled) {
+          msg = `${colors.cyan}Status:${colors.reset}\n  ${colors.green}[ON] Zai ENABLED${colors.reset}\n  ${colors.dim}URL: ${status.url}${colors.reset}`;
+        } else {
+          msg = `${colors.cyan}Status:${colors.reset}\n  ${colors.white}[OFF] Zai DISABLED (default Anthropic)${colors.reset}`;
+        }
+        showMessage(msg, showMenu);
+        break;
+      case 3: // Edit Config
+        if (process.stdin.isTTY) {
+          process.stdin.setRawMode(false);
+        }
+        editConfig(env);
+        break;
+      case 4: // Quit
+        if (process.stdin.isTTY) {
+          process.stdin.setRawMode(false);
+        }
+        console.clear();
+        console.log('');
+        console.log(`${colors.dim}Goodbye!${colors.reset}`);
+        console.log('');
+        process.exit(0);
+        break;
     }
   }
 
-  doEdit();
+  function onKeypress(str, key) {
+    if (!active || !key) return;
+
+    if (key.name === 'up') {
+      selectedIndex = (selectedIndex - 1 + options.length) % options.length;
+      render();
+    } else if (key.name === 'down') {
+      selectedIndex = (selectedIndex + 1) % options.length;
+      render();
+    } else if (key.name === 'return') {
+      handleSelect();
+    } else if (key.name === 'q' || (key.ctrl && key.name === 'c')) {
+      active = false;
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      console.clear();
+      console.log('');
+      console.log(`${colors.dim}Goodbye!${colors.reset}`);
+      console.log('');
+      process.exit(0);
+    }
+  }
+
+  // Initialize
+  initKeypress();
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+  render();
+  process.stdin.on('keypress', onKeypress);
+}
+
+function showMessage(msg, callback) {
+  console.clear();
+  console.log('');
+  console.log(msg);
+  console.log('');
+  console.log(`${colors.dim}Press any key to continue...${colors.reset}`);
+
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+  process.stdin.once('keypress', () => {
+    callback();
+  });
+}
+
+// Edit config with arrow key navigation
+function editConfig(env) {
+  const options = [
+    { label: 'Edit Token', desc: `${'****' + env.ZAI_AUTH_TOKEN.slice(-4)}` },
+    { label: 'Edit URL', desc: env.ZAI_BASE_URL },
+    { label: 'Edit Timeout', desc: `${env.ZAI_TIMEOUT_MS}ms` },
+    { label: 'Save', desc: 'Save changes' },
+    { label: 'Back', desc: 'Return to main menu' },
+    { label: 'Exit', desc: 'Quit program' },
+  ];
+
+  let selectedIndex = 0;
+  let active = true;
+
+  function render() {
+    console.clear();
+    console.log('');
+    console.log(`${colors.cyan}${colors.bright}    ╔═════════════════════════════════╗${colors.reset}`);
+    console.log(`${colors.cyan}${colors.bright}    ║     Edit Configuration          ║${colors.reset}`);
+    console.log(`${colors.cyan}${colors.bright}    ╚═════════════════════════════════╝${colors.reset}`);
+    console.log('');
+
+    // Update descriptions with current values
+    options[0].desc = `${'****' + env.ZAI_AUTH_TOKEN.slice(-4)}`;
+    options[1].desc = env.ZAI_BASE_URL;
+    options[2].desc = `${env.ZAI_TIMEOUT_MS}ms`;
+
+    options.forEach((opt, i) => {
+      const prefix = i === selectedIndex ? `${colors.cyan}  > ` : '    ';
+      const label = i === selectedIndex
+        ? `${colors.bright}${colors.cyan}${opt.label}${colors.reset}`
+        : `${colors.white}${opt.label}${colors.reset}`;
+      const desc = `${colors.dim}${opt.desc}${colors.reset}`;
+      console.log(`${prefix}${label}  ${desc}`);
+    });
+
+    console.log('');
+    console.log(`${colors.dim}    ─────────────────────────────────────${colors.reset}`);
+    console.log('');
+    console.log(`${colors.dim}    ↑↓ Navigate  Enter Select  q Quit${colors.reset}`);
+  }
+
+  function promptInput(label, currentValue, callback) {
+    active = false;
+    process.stdin.removeListener('keypress', onKeypress);
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(false);
+    }
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    console.clear();
+    console.log('');
+    console.log(`${colors.cyan}${label}${colors.reset}`);
+    console.log(`${colors.dim}Current: ${currentValue}${colors.reset}`);
+    console.log(`${colors.dim}Press Enter to keep current value${colors.reset}`);
+    console.log('');
+
+    rl.question(`${colors.cyan}New value: ${colors.reset}`, (answer) => {
+      rl.close();
+      callback(answer.trim() || null);
+    });
+  }
+
+  function handleSelect() {
+    switch (selectedIndex) {
+      case 0: // Edit Token
+        promptInput('Edit Token', '****' + env.ZAI_AUTH_TOKEN.slice(-4), (val) => {
+          if (val) env.ZAI_AUTH_TOKEN = val;
+          restartMenu();
+        });
+        break;
+      case 1: // Edit URL
+        promptInput('Edit Base URL', env.ZAI_BASE_URL, (val) => {
+          if (val) env.ZAI_BASE_URL = val;
+          restartMenu();
+        });
+        break;
+      case 2: // Edit Timeout
+        promptInput('Edit Timeout (ms)', env.ZAI_TIMEOUT_MS, (val) => {
+          if (val) env.ZAI_TIMEOUT_MS = val;
+          restartMenu();
+        });
+        break;
+      case 3: // Save
+        active = false;
+        process.stdin.removeListener('keypress', onKeypress);
+        saveEnv(env);
+        showMessage(`${colors.green}✓ Config saved${colors.reset}`, showMenu);
+        break;
+      case 4: // Back
+        active = false;
+        process.stdin.removeListener('keypress', onKeypress);
+        showMenu();
+        break;
+      case 5: // Exit
+        active = false;
+        if (process.stdin.isTTY) {
+          process.stdin.setRawMode(false);
+        }
+        console.clear();
+        console.log('');
+        console.log(`${colors.dim}Goodbye!${colors.reset}`);
+        console.log('');
+        process.exit(0);
+        break;
+    }
+  }
+
+  function restartMenu() {
+    active = true;
+    initKeypress();
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+    }
+    process.stdin.resume();
+    render();
+    process.stdin.on('keypress', onKeypress);
+  }
+
+  function onKeypress(str, key) {
+    if (!active || !key) return;
+
+    if (key.name === 'up') {
+      selectedIndex = (selectedIndex - 1 + options.length) % options.length;
+      render();
+    } else if (key.name === 'down') {
+      selectedIndex = (selectedIndex + 1) % options.length;
+      render();
+    } else if (key.name === 'return') {
+      handleSelect();
+    } else if (key.name === 'q' || (key.ctrl && key.name === 'c')) {
+      active = false;
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+      console.clear();
+      console.log('');
+      console.log(`${colors.dim}Goodbye!${colors.reset}`);
+      console.log('');
+      process.exit(0);
+    }
+  }
+
+  // Initialize
+  initKeypress();
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+  }
+  process.stdin.resume();
+  render();
+  process.stdin.on('keypress', onKeypress);
 }
 
 // CLI mode
