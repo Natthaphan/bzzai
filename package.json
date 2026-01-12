@@ -1,10 +1,11 @@
 {
   "name": "bzzai-helper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Toggle Zai API for Claude Code via TUI Menu",
   "main": "index.js",
   "bin": {
-    "bzzai": "./bin/bzzai"
+    "bzzai": "./bin/bzzai",
+    "bzzai-helper": "./bin/bzzai"
   },
   "scripts": {
     "postinstall": "chmod +x bin/*"
